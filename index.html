@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>初めてのページ</title>
-  </head>
-  <body>
-    <h1>やったー！</h1>
-    <p>iPadからHTMLを書いてるよ！</p>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>JavaScriptテスト</title>
+</head>
+<body>
+  <h1>ここはHTMLで書いた文字</h1>
+  
+  <p id="js-output">JavaScriptで文字を出す場所</p>
+
+  <script>
+    // ここからJavaScript
+    document.getElementById("js-output").textContent = "やったー！JavaScriptから表示されたよ！";
+  </script>
+</body>
 </html>
