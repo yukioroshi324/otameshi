@@ -2,16 +2,42 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>JavaScriptテスト</title>
+  <title>簡単ジャンケン</title>
 </head>
 <body>
-  <h1>ここはHTMLで書いた文字</h1>
-  
-  <p id="js-output">JavaScriptで文字を出す場所</p>
+  <h1>ジャンケンしよう！</h1>
+
+  <p>あなたの手を選んでね：</p>
+  <button onclick="play('グー')">グー</button>
+  <button onclick="play('チョキ')">チョキ</button>
+  <button onclick="play('パー')">パー</button>
+
+  <h2 id="result"></h2>
 
   <script>
-    // ここからJavaScript
-    document.getElementById("js-output").textContent = "やったー！JavaScriptから表示されたよ！";
+    function play(userChoice) {
+      // コンピュータの手をランダムに決定
+      const choices = ['グー', 'チョキ', 'パー'];
+      const computerChoice = choices[Math.floor(Math.random() * 3)];
+
+      // 勝敗判定
+      let outcome = '';
+      if (userChoice === computerChoice) {
+        outcome = 'あいこ！';
+      } else if (
+        (userChoice === 'グー' && computerChoice === 'チョキ') ||
+        (userChoice === 'チョキ' && computerChoice === 'パー') ||
+        (userChoice === 'パー' && computerChoice === 'グー')
+      ) {
+        outcome = 'あなたの勝ち！🎉';
+      } else {
+        outcome = 'あなたの負け…';
+      }
+
+      // 結果表示
+      document.getElementById('result').textContent =
+        `あなた: ${userChoice}  |  コンピュータ: ${computerChoice} → ${outcome}`;
+    }
   </script>
 </body>
 </html>
