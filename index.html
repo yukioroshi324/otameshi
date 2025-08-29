@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>簡単ジャンケン</title>
+  <title>ジャンケン（個人データ保存）</title>
 </head>
 <body>
   <h1>ジャンケンしよう！</h1>
@@ -13,30 +13,56 @@
   <button onclick="play('パー')">パー</button>
 
   <h2 id="result"></h2>
+  <p>勝った回数: <span id="winCount">0</span></p>
+  <p>負けた回数: <span id="loseCount">0</span></p>
+  <p>あいこの回数: <span id="drawCount">0</span></p>
 
   <script>
+    // ローカルストレージからカウントを取得（無ければ0）
+    let winCount = Number(localStorage.getItem('winCount') || 0);
+    let loseCount = Number(localStorage.getItem('loseCount') || 0);
+    let drawCount = Number(localStorage.getItem('drawCount') || 0);
+
+    // 表示を更新
+    function updateDisplay() {
+      document.getElementById('winCount').textContent = winCount;
+      document.getElementById('loseCount').textContent = loseCount;
+      document.getElementById('drawCount').textContent = drawCount;
+    }
+
+    updateDisplay();
+
     function play(userChoice) {
-      // コンピュータの手をランダムに決定
       const choices = ['グー', 'チョキ', 'パー'];
       const computerChoice = choices[Math.floor(Math.random() * 3)];
 
-      // 勝敗判定
       let outcome = '';
       if (userChoice === computerChoice) {
         outcome = 'あいこ！';
+        drawCount++;
       } else if (
         (userChoice === 'グー' && computerChoice === 'チョキ') ||
         (userChoice === 'チョキ' && computerChoice === 'パー') ||
         (userChoice === 'パー' && computerChoice === 'グー')
       ) {
         outcome = 'あなたの勝ち！🎉';
+        winCount++;
       } else {
         outcome = 'あなたの負け…';
+        loseCount++;
       }
 
       // 結果表示
       document.getElementById('result').textContent =
         `あなた: ${userChoice}  |  コンピュータ: ${computerChoice} → ${outcome}`;
+
+      // カウント表示を更新
+      updateDisplay();
+
+      // ローカルストレージに保存
+      localStorage.setItem('winCount', winCount);
+      localStorage.setItem('loseCount', loseCount);
+      localStorage.setItem('drawCount', drawCount);
     }
   </script>
 </body>
