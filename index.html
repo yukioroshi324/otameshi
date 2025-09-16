@@ -1,84 +1,73 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ジャンケン 結果表示</title>
-  <style>
-    table, th, td {
-      border: 1px solid black;
-      border-collapse: collapse;
-      padding: 5px;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>あいさつデモ</title>
+<style>
+  html, body { height: 100%; margin: 0; font-family: "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; }
+  body {
+    background: white url("D1A94E4C-3769-4134-B45D-BE05A6FF1285.jpeg") bottom left no-repeat;
+    background-size: contain;
+  }
+
+  .bottom-left {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #greeting {
+    min-width: 160px;
+    min-height: 42px;
+    border: 3px solid #000;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.9);
+    font-size: 20px;
+    box-sizing: border-box;
+  }
+
+  #greetBtn {
+    font-size: 18px;
+    padding: 8px 14px;
+    border: 3px solid #000;
+    background: white;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 420px) {
+    .bottom-left { left: 10px; bottom: 12px; gap: 8px; }
+    #greeting { min-width: 120px; font-size: 18px; }
+    #greetBtn { padding: 6px 10px; font-size: 16px; }
+  }
+</style>
 </head>
 <body>
-  <h1>ジャンケンしよう！</h1>
+  <div class="bottom-left" role="region" aria-label="あいさつエリア">
+    <div id="greeting" aria-live="polite"></div>
+    <button id="greetBtn" aria-pressed="false">あいさつ</button>
+  </div>
 
-  <p>あなたの手を選んでね：</p>
-  <button onclick="play('グー')">グー</button>
-  <button onclick="play('チョキ')">チョキ</button>
-  <button onclick="play('パー')">パー</button>
+<script>
+  const btn = document.getElementById('greetBtn');
+  const disp = document.getElementById('greeting');
 
-  <h2 id="result"></h2>
+  btn.addEventListener('click', () => {
+    disp.textContent = 'こんにちは';
+    btn.setAttribute('aria-pressed', 'true');
 
-  <h3>結果一覧</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>あなたの手</th>
-        <th>コンピュータの手</th>
-        <th>勝敗</th>
-      </tr>
-    </thead>
-    <tbody id="resultTable">
-      <!-- ここに結果を追加 -->
-    </tbody>
-  </table>
-
-  <script>
-    function play(userChoice) {
-      const choices = ['グー', 'チョキ', 'パー'];
-      const computerChoice = choices[Math.floor(Math.random() * 3)];
-
-      let outcome = '';
-      if (userChoice === computerChoice) {
-        outcome = 'あいこ';
-      } else if (
-        (userChoice === 'グー' && computerChoice === 'チョキ') ||
-        (userChoice === 'チョキ' && computerChoice === 'パー') ||
-        (userChoice === 'パー' && computerChoice === 'グー')
-      ) {
-        outcome = '勝ち';
-      } else {
-        outcome = '負け';
-      }
-
-      // 最新の結果表示
-      document.getElementById('result').textContent =
-        `あなた: ${userChoice}  |  コンピュータ: ${computerChoice} → ${outcome}`;
-
-      // 結果一覧に追加
-      const table = document.getElementById('resultTable');
-      const newRow = document.createElement('tr');
-      newRow.innerHTML = `<td>${userChoice}</td><td>${computerChoice}</td><td>${outcome}</td>`;
-      table.appendChild(newRow);
-
-      // ローカルストレージに保存
-      let history = JSON.parse(localStorage.getItem('history') || '[]');
-      history.push({user: userChoice, computer: computerChoice, outcome: outcome});
-      localStorage.setItem('history', JSON.stringify(history));
-    }
-
-    // ページを開いた時に履歴を復元
-    window.onload = function() {
-      let history = JSON.parse(localStorage.getItem('history') || '[]');
-      const table = document.getElementById('resultTable');
-      history.forEach(entry => {
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `<td>${entry.user}</td><td>${entry.computer}</td><td>${entry.outcome}</td>`;
-        table.appendChild(newRow);
-      });
-    };
-  </script>
+    disp.animate(
+      [{ boxShadow: '0 0 0 0 rgba(0,0,0,0)' }, { boxShadow: '0 0 0 8px rgba(0,0,0,0.08)' }],
+      { duration: 400, easing: 'ease-out' }
+    );
+  });
+</script>
 </body>
 </html>
