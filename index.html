@@ -1,73 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>あいさつデモ</title>
-<style>
-  html, body { height: 100%; margin: 0; font-family: "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; }
-  body {
-    background: white url("D1A94E4C-3769-4134-B45D-BE05A6FF1285.jpeg") bottom left no-repeat;
-    background-size: contain;
-  }
-
-  .bottom-left {
-    position: fixed;
-    left: 20px;
-    bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  #greeting {
-    min-width: 160px;
-    min-height: 42px;
-    border: 3px solid #000;
-    padding: 6px 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.9);
-    font-size: 20px;
-    box-sizing: border-box;
-  }
-
-  #greetBtn {
-    font-size: 18px;
-    padding: 8px 14px;
-    border: 3px solid #000;
-    background: white;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  @media (max-width: 420px) {
-    .bottom-left { left: 10px; bottom: 12px; gap: 8px; }
-    #greeting { min-width: 120px; font-size: 18px; }
-    #greetBtn { padding: 6px 10px; font-size: 16px; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>勉強管理アプリ</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      background: #f0f0f0;
+      padding: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    #content {
+      margin: 40px 0;
+      font-size: 30px;
+      color: red;
+    }
+    .menu {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      background: #ddd;
+      padding: 10px 0;
+    }
+    .menu button {
+      flex: 1;
+      padding: 10px;
+      margin: 0 5px;
+      font-size: 18px;
+    }
+  </style>
 </head>
 <body>
-  <div class="bottom-left" role="region" aria-label="あいさつエリア">
-    <div id="greeting" aria-live="polite"></div>
-    <button id="greetBtn" aria-pressed="false">あいさつ</button>
+
+  <header>
+    勉強管理アプリ
+  </header>
+
+  <div id="content">
+    ホーム
   </div>
 
-<script>
-  const btn = document.getElementById('greetBtn');
-  const disp = document.getElementById('greeting');
+  <div class="menu">
+    <button onclick="showContent('ホーム')">ホーム</button>
+    <button onclick="showContent('目標')">記録</button>
+    <button onclick="showContent('カレンダー')">タイマー</button>
+    <button onclick="showContent('その他')">その他</button>
+  </div>
 
-  btn.addEventListener('click', () => {
-    disp.textContent = 'こんにちは';
-    btn.setAttribute('aria-pressed', 'true');
+  <script>
+    function showContent(text) {
+      document.getElementById("content").innerText = text;
+    }
+  </script>
 
-    disp.animate(
-      [{ boxShadow: '0 0 0 0 rgba(0,0,0,0)' }, { boxShadow: '0 0 0 8px rgba(0,0,0,0.08)' }],
-      { duration: 400, easing: 'ease-out' }
-    );
-  });
-</script>
 </body>
 </html>
