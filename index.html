@@ -1,65 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>勉強管理アプリ</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    header {
-      background: #f0f0f0;
-      padding: 10px;
-      font-size: 20px;
-      font-weight: bold;
-    }
-    #content {
-      margin: 40px 0;
-      font-size: 30px;
-      color: red;
-    }
-    .menu {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      display: flex;
-      justify-content: space-around;
-      background: #ddd;
-      padding: 10px 0;
-    }
-    .menu button {
-      flex: 1;
-      padding: 10px;
-      margin: 0 5px;
-      font-size: 18px;
-    }
-  </style>
+  <meta charset="utf-8">
+  <title>データ表示ページ</title>
 </head>
 <body>
-
-  <header>
-    勉強管理アプリ
-  </header>
-
-  <div id="content">
-    ホーム
-  </div>
-
-  <div class="menu">
-    <button onclick="showContent('ホーム')">ホーム</button>
-    <button onclick="showContent('目標')">記録</button>
-    <button onclick="showContent('カレンダー')">タイマー</button>
-    <button onclick="showContent('その他')">その他</button>
-  </div>
+  <h1>保存されたデータ</h1>
+  <div id="output"></div>
+  <br>
+  <a href="https://yukioroshi324.github.io/haipa-1/">入力ページに戻る</a>
 
   <script>
-    function showContent(text) {
-      document.getElementById("content").innerText = text;
+    const data = localStorage.getItem("userData");
+    if (data) {
+      const user = JSON.parse(data);
+      document.getElementById("output").innerHTML = `
+        <p>名前: ${user.name}</p>
+        <p>年齢: ${user.age}</p>
+        <p>好きな色: ${user.color}</p>
+      `;
+    } else {
+      document.getElementById("output").textContent = "データが保存されていません。";
     }
   </script>
-
 </body>
 </html>
