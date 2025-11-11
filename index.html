@@ -1,13 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>URLスキーム実験</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ポモドーロタイマー</title>
+<style>
+  body {
+    font-family: "Segoe UI", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: #f8f9fa;
+    transition: background 0.2s;
+  }
+  .timer-box {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 2;
+    position: relative;
+  }
+  .circle {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 10px solid #1a73e8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+  }
+  .time {
+    font-size: 42px;
+    font-weight: bold;
+  }
+  .buttons {
+    margin-top: 15px;
+  }
+  button {
+    margin: 5px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+  }
+  .start { background: #333; }
+  .next { background: #1a73e8; }
+  .end { background: #e53935; }
+  .preset button {
+    color: white;
+    margin: 5px;
+    border-radius: 6px;
+    padding: 6px 12px;
+    border: none;
+  }
+  .focus { background: #1a73e8; }
+  .short { background: #43a047; }
+  .long { background: #8e24aa; }
+  .flash {
+    animation: flash-bg 0.3s infinite alternate;
+  }
+  @keyframes flash-bg {
+    0% { background: #8e24aa; }
+    100% { background: #76ff03; }
+  }
+</style>
 </head>
 <body>
-  <button onclick="location.href='line://'">LINE を開く</button>
-  <button onclick="location.href='youtube://'">YouTube を開く</button>
-  <button onclick="location.href='twitter://'">Twitter を開く</button>
-  <button onclick="location.href='comgooglemaps://'">Google Maps を開く</button>
+  <div class="timer-box">
+    <div style="display:flex;justify-content:space-between;">
+      <span id="modeLabel">集中 25:00</span>
+      <span id="setLabel">1セット目</span>
+    </div>
+    <div class="circle">
+      <span id="time" class="time">25:00</span>
+    </div>
+
+    <div class="buttons">
+      <button class="start" id="startBtn">開始</button>
+      <button class="next" id="nextBtn">次へ</button>
+      <button class="end" id="endBtn">終了</button>
+    </div>
+    <p>スペース: 一時停止/再開・K: 次へ・E: 終了</p>
+    <div class="preset">
+      <button class="focus" onclick="setMode('focus')">集中 25分</button>
+      <button class="short" onclick="setMode('short')">休憩 5分</button>
+      <button class="long" onclick="setMode('long')">長休憩 15分</button>
+    </div>
+  </div>
+
+<script>
+let timer = null;
+let timeLeft = 25 * 60;
+let running = false;
+let setCount = 1;
+let mode = "focus";
+let flashing = false;
+
+const timeDisplay = document.getElementById("time");
+const modeLabel = document.getElementById("modeLabel");
+const setLabel = document.getElementById("setLabel");
+const startBtn = document.getElementById("startBtn");
+
+function updateDisplay() {
+  const m = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+  const s = (timeLeft % 60).toString().padStart(2, "0");
+  timeDisplay.textContent = `${m}:${s}`;
+}
+
+function startTimer() {
+  if (running) {
+    clearInterval(timer);
+    running = false;
+    startBtn.textContent = "開始";
+    return;
+  }
+  running = true;
+  startBtn.textContent = "一時停止";
+  timer = setInterval(() => {
+    if (timeLeft > 0) {
+      timeLeft--;
+      updateDisplay();
+    } else {
+      clearInterval(timer);
+      running = false;
+      triggerFlash();
+    }
+  }, 1000);
+}
+
+function setMode(newMode) {
+  clearInterval(timer);
+  running = false;
+  startBtn.textContent = "開始";
+
+  if (newMode === "focus") {
+    timeLeft = 1 * 60;
+    modeLabel.textContent = "集中 25:00";
+  } else if (newMode === "short") {
+    timeLeft = 5 * 60;
+    modeLabel.textContent = "休憩 5:00";
+  } else if (newMode === "long") {
+    timeLeft = 15 * 60;
+    modeLabel.textContent = "長休憩 15:00";
+  }
+  mode = newMode;
+  stopFlash();
+  updateDisplay();
+}
+
+function triggerFlash() {
+  document.body.classList.add("flash");
+  flashing = true;
+  alert("タイマー終了！");
+}
+
+function stopFlash() {
+  document.body.classList.remove("flash");
+  flashing = false;
+}
+
+document.body.addEventListener("click", () => {
+  if (flashing) stopFlash();
+});
+
+document.getElementById("startBtn").onclick = startTimer;
+document.getElementById("nextBtn").onclick = () => {
+  setCount++;
+  setLabel.textContent = `${setCount}セット目`;
+  setMode("focus");
+};
+document.getElementById("endBtn").onclick = () => {
+  clearInterval(timer);
+  running = false;
+  setCount = 1;
+  setLabel.textContent = "1セット目";
+  setMode("focus");
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") startTimer();
+  if (e.key.toLowerCase() === "k") document.getElementById("nextBtn").click();
+  if (e.key.toLowerCase() === "e") document.getElementById("endBtn").click();
+});
+
+updateDisplay();
+</script>
 </body>
 </html>
