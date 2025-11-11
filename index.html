@@ -79,15 +79,14 @@ let isRunning = false;
 let isStudy = true;
 let setCount = 1;
 let flashing = false;
+let elapsedUp = 0; // カウントアップ用経過秒数
 
-// 日本時間の日付キー
 function todayKey() {
   const now = new Date();
   now.setHours(now.getHours() + 9);
   return now.toISOString().split("T")[0];
 }
 
-// 日付が変わったらリセット
 function checkDailyReset() {
   const savedDate = localStorage.getItem("fixeve_date");
   const today = todayKey();
@@ -98,7 +97,6 @@ function checkDailyReset() {
 }
 checkDailyReset();
 
-// 今日の合計勉強時間を表示
 function updateTotalDisplay() {
   const sec = parseInt(localStorage.getItem("fixeve_studyTime") || "0");
   const h = Math.floor(sec / 3600);
@@ -106,39 +104,41 @@ function updateTotalDisplay() {
   totalDisplay.textContent = `今日の合計：${h}時間${m}分`;
 }
 
-// 勉強時間を加算保存
 function recordStudy(seconds) {
+  if (seconds <= 0) return;
   let sec = parseInt(localStorage.getItem("fixeve_studyTime") || "0");
   localStorage.setItem("fixeve_studyTime", sec + seconds);
   updateTotalDisplay();
 }
 
-// タイマー表示を更新
 function updateDisplay() {
   const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const seconds = String(timeLeft % 60).padStart(2, "0");
   timerDisplay.textContent = `${minutes}:${seconds}`;
 }
 
-// モードごとの初期時間を返す
 function getInitialTime() {
-  if (modeSelect.value === "up") return 0;
   if (modeSelect.value === "pomodoro") return 60;
   if (modeSelect.value === "focus50") return 3000;
+  return 0;
 }
 
 // モード変更時に記録＆リセット
 modeSelect.addEventListener("change", () => {
-  if (isRunning || timeLeft > 0) {
-    if (isStudy) recordStudy(Math.max(0, getInitialTime() - timeLeft));
+  if (isRunning) pauseTimer();
+  if (modeSelect.value === "up" && elapsedUp > 0) {
+    recordStudy(elapsedUp);
+  } else if (isStudy && timeLeft > 0 && getInitialTime() > 0) {
+    recordStudy(getInitialTime() - timeLeft);
   }
   stopTimer();
+  elapsedUp = 0;
 });
 
-// --- 超チカチカ版点滅 ---
+// --- 超チカチカ ---
 function startFlashing() {
   flashing = true;
-  let colors = ["#9f00ff", "#000000", "#baff00", "#000000"]; // 紫→黒→黄緑→黒
+  let colors = ["#9f00ff", "#000000", "#baff00", "#000000"];
   let i = 0;
   let flashInterval = setInterval(() => {
     if (!flashing) {
@@ -148,19 +148,18 @@ function startFlashing() {
     }
     document.body.style.backgroundColor = colors[i % colors.length];
     i++;
-  }, 150); // ← 0.15秒ごと点滅（高速）
+  }, 150);
   document.body.addEventListener("click", nextAfterFlash, { once: true });
 }
 
-// 点滅が終わったら次のステージへ
 function nextAfterFlash() {
   flashing = false;
   isStudy = !isStudy;
   if (isStudy) {
     setCount++;
     const longBreak = (modeSelect.value === "pomodoro" ? 900 : 1800);
-    const shortBreak = (modeSelect.value === "pomodoro" ? 300 : 600);
-    timeLeft = (setCount % 5 === 0) ? longBreak : (modeSelect.value === "pomodoro" ?60 : 3000);
+    const studyTime = (modeSelect.value === "pomodoro" ? 60 : 3000);
+    timeLeft = (setCount % 5 === 0) ? longBreak : studyTime;
   } else {
     timeLeft = (modeSelect.value === "pomodoro" ? 300 : 600);
   }
@@ -168,7 +167,6 @@ function nextAfterFlash() {
   startTimer();
 }
 
-// タイマー開始
 function startTimer() {
   if (isRunning) return;
   isRunning = true;
@@ -176,7 +174,8 @@ function startTimer() {
 
   timer = setInterval(() => {
     if (modeSelect.value === "up") {
-      timeLeft++;
+      elapsedUp++;
+      timeLeft = elapsedUp;
     } else {
       timeLeft--;
       if (timeLeft < 0) {
@@ -191,19 +190,13 @@ function startTimer() {
   }, 1000);
 }
 
-// 一時停止
 function pauseTimer() {
   if (!isRunning) return;
   clearInterval(timer);
   isRunning = false;
   statusDisplay.textContent = "一時停止中";
-  if (isStudy && modeSelect.value !== "up") {
-    let elapsed = getInitialTime() - timeLeft;
-    if (elapsed > 0) recordStudy(elapsed);
-  }
 }
 
-// 停止
 function stopTimer() {
   clearInterval(timer);
   isRunning = false;
@@ -215,15 +208,18 @@ function stopTimer() {
 }
 
 startBtn.onclick = () => {
-  if (timeLeft === 0) timeLeft = getInitialTime();
+  if (modeSelect.value !== "up" && timeLeft === 0) timeLeft = getInitialTime();
   startTimer();
 };
 pauseBtn.onclick = pauseTimer;
 stopBtn.onclick = () => {
-  if (isStudy && timeLeft > 0 && modeSelect.value !== "up") {
+  if (modeSelect.value === "up") {
+    recordStudy(elapsedUp);
+  } else if (isStudy && timeLeft > 0 && getInitialTime() > 0) {
     recordStudy(getInitialTime() - timeLeft);
   }
   stopTimer();
+  elapsedUp = 0;
 };
 
 updateDisplay();
