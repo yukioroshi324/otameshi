@@ -1,196 +1,233 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ポモドーロタイマー</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixeve Timer</title>
 <style>
   body {
-    font-family: "Segoe UI", sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background: #f8f9fa;
-    transition: background 0.2s;
-  }
-  .timer-box {
-    background: white;
-    border-radius: 16px;
-    padding: 30px;
+    background-color: #eef6ff;
+    font-family: "Arial", sans-serif;
     text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    z-index: 2;
-    position: relative;
+    padding: 30px;
+    transition: background-color 0.1s;
   }
-  .circle {
-    width: 220px;
-    height: 220px;
-    border-radius: 50%;
-    border: 10px solid #1a73e8;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px auto;
+  h1 { margin-bottom: 10px; }
+  #timer {
+    font-size: 64px;
+    margin: 20px 0;
   }
-  .time {
-    font-size: 42px;
-    font-weight: bold;
-  }
-  .buttons {
-    margin-top: 15px;
+  #status, #total {
+    font-size: 20px;
+    margin: 10px 0;
   }
   button {
-    margin: 5px;
-    padding: 10px 18px;
+    font-size: 20px;
+    margin: 10px;
+    padding: 10px 30px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 16px;
-    color: white;
   }
-  .start { background: #333; }
-  .next { background: #1a73e8; }
-  .end { background: #e53935; }
-  .preset button {
-    color: white;
-    margin: 5px;
-    border-radius: 6px;
-    padding: 6px 12px;
-    border: none;
+  .start { background-color: #4caf50; color: white; }
+  .pause { background-color: #ff9800; color: white; }
+  .stop { background-color: #f44336; color: white; }
+  select {
+    padding: 8px;
+    font-size: 18px;
   }
-  .focus { background: #1a73e8; }
-  .short { background: #43a047; }
-  .long { background: #8e24aa; }
-  .flash {
-    animation: flash-bg 0.3s infinite alternate;
-  }
-  @keyframes flash-bg {
-    0% { background: #8e24aa; }
-    100% { background: #76ff03; }
+  #home {
+    display: block;
+    margin-top: 30px;
+    color: #007bff;
+    text-decoration: none;
   }
 </style>
 </head>
 <body>
-  <div class="timer-box">
-    <div style="display:flex;justify-content:space-between;">
-      <span id="modeLabel">集中 25:00</span>
-      <span id="setLabel">1セット目</span>
-    </div>
-    <div class="circle">
-      <span id="time" class="time">25:00</span>
-    </div>
+  <h1>タイマー</h1>
 
-    <div class="buttons">
-      <button class="start" id="startBtn">開始</button>
-      <button class="next" id="nextBtn">次へ</button>
-      <button class="end" id="endBtn">終了</button>
-    </div>
-    <p>スペース: 一時停止/再開・K: 次へ・E: 終了</p>
-    <div class="preset">
-      <button class="focus" onclick="setMode('focus')">集中 25分</button>
-      <button class="short" onclick="setMode('short')">休憩 5分</button>
-      <button class="long" onclick="setMode('long')">長休憩 15分</button>
-    </div>
-  </div>
+  <label for="mode">モード選択：</label>
+  <select id="mode">
+    <option value="up">カウントアップ</option>
+    <option value="pomodoro">25分勉強 / 5分休憩</option>
+    <option value="focus50">50分勉強 / 10分休憩</option>
+  </select>
+
+  <div id="timer">00:00</div>
+  <div id="status">停止中</div>
+  <div id="total">今日の合計：0時間0分</div>
+
+  <button class="start" id="startBtn">開始</button>
+  <button class="pause" id="pauseBtn">中断</button>
+  <button class="stop" id="stopBtn">終了</button>
+
+  <a id="home" href="https://fixeve.github.io/fixeve-home/">ホームに戻る</a>
 
 <script>
+let timerDisplay = document.getElementById("timer");
+let statusDisplay = document.getElementById("status");
+let totalDisplay = document.getElementById("total");
+let startBtn = document.getElementById("startBtn");
+let pauseBtn = document.getElementById("pauseBtn");
+let stopBtn = document.getElementById("stopBtn");
+let modeSelect = document.getElementById("mode");
+
 let timer = null;
-let timeLeft = 25 * 60;
-let running = false;
+let timeLeft = 0;
+let isRunning = false;
+let isStudy = true;
 let setCount = 1;
-let mode = "focus";
 let flashing = false;
 
-const timeDisplay = document.getElementById("time");
-const modeLabel = document.getElementById("modeLabel");
-const setLabel = document.getElementById("setLabel");
-const startBtn = document.getElementById("startBtn");
-
-function updateDisplay() {
-  const m = Math.floor(timeLeft / 60).toString().padStart(2, "0");
-  const s = (timeLeft % 60).toString().padStart(2, "0");
-  timeDisplay.textContent = `${m}:${s}`;
+// 日本時間の日付キー
+function todayKey() {
+  const now = new Date();
+  now.setHours(now.getHours() + 9);
+  return now.toISOString().split("T")[0];
 }
 
-function startTimer() {
-  if (running) {
-    clearInterval(timer);
-    running = false;
-    startBtn.textContent = "開始";
-    return;
+// 日付が変わったらリセット
+function checkDailyReset() {
+  const savedDate = localStorage.getItem("fixeve_date");
+  const today = todayKey();
+  if (savedDate !== today) {
+    localStorage.setItem("fixeve_date", today);
+    localStorage.setItem("fixeve_studyTime", "0");
   }
-  running = true;
-  startBtn.textContent = "一時停止";
-  timer = setInterval(() => {
-    if (timeLeft > 0) {
-      timeLeft--;
-      updateDisplay();
-    } else {
-      clearInterval(timer);
-      running = false;
-      triggerFlash();
+}
+checkDailyReset();
+
+// 今日の合計勉強時間を表示
+function updateTotalDisplay() {
+  const sec = parseInt(localStorage.getItem("fixeve_studyTime") || "0");
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  totalDisplay.textContent = `今日の合計：${h}時間${m}分`;
+}
+
+// 勉強時間を加算保存
+function recordStudy(seconds) {
+  let sec = parseInt(localStorage.getItem("fixeve_studyTime") || "0");
+  localStorage.setItem("fixeve_studyTime", sec + seconds);
+  updateTotalDisplay();
+}
+
+// タイマー表示を更新
+function updateDisplay() {
+  const minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  const seconds = String(timeLeft % 60).padStart(2, "0");
+  timerDisplay.textContent = `${minutes}:${seconds}`;
+}
+
+// モードごとの初期時間を返す
+function getInitialTime() {
+  if (modeSelect.value === "up") return 0;
+  if (modeSelect.value === "pomodoro") return 1500;
+  if (modeSelect.value === "focus50") return 3000;
+}
+
+// モード変更時に記録＆リセット
+modeSelect.addEventListener("change", () => {
+  if (isRunning || timeLeft > 0) {
+    if (isStudy) recordStudy(Math.max(0, getInitialTime() - timeLeft));
+  }
+  stopTimer();
+});
+
+// --- 超チカチカ版点滅 ---
+function startFlashing() {
+  flashing = true;
+  let colors = ["#9f00ff", "#000000", "#baff00", "#000000"]; // 紫→黒→黄緑→黒
+  let i = 0;
+  let flashInterval = setInterval(() => {
+    if (!flashing) {
+      clearInterval(flashInterval);
+      document.body.style.backgroundColor = "#eef6ff";
+      return;
     }
+    document.body.style.backgroundColor = colors[i % colors.length];
+    i++;
+  }, 150); // ← 0.15秒ごと点滅（高速）
+  document.body.addEventListener("click", nextAfterFlash, { once: true });
+}
+
+// 点滅が終わったら次のステージへ
+function nextAfterFlash() {
+  flashing = false;
+  isStudy = !isStudy;
+  if (isStudy) {
+    setCount++;
+    const longBreak = (modeSelect.value === "pomodoro" ? 900 : 1800);
+    const shortBreak = (modeSelect.value === "pomodoro" ? 300 : 600);
+    timeLeft = (setCount % 5 === 0) ? longBreak : (modeSelect.value === "pomodoro" ?60 : 3000);
+  } else {
+    timeLeft = (modeSelect.value === "pomodoro" ? 300 : 600);
+  }
+  updateDisplay();
+  startTimer();
+}
+
+// タイマー開始
+function startTimer() {
+  if (isRunning) return;
+  isRunning = true;
+  statusDisplay.textContent = isStudy ? "勉強中" : "休憩中";
+
+  timer = setInterval(() => {
+    if (modeSelect.value === "up") {
+      timeLeft++;
+    } else {
+      timeLeft--;
+      if (timeLeft < 0) {
+        clearInterval(timer);
+        isRunning = false;
+        if (isStudy) recordStudy(modeSelect.value === "pomodoro" ? 60 : 3000);
+        startFlashing();
+        return;
+      }
+    }
+    updateDisplay();
   }, 1000);
 }
 
-function setMode(newMode) {
+// 一時停止
+function pauseTimer() {
+  if (!isRunning) return;
   clearInterval(timer);
-  running = false;
-  startBtn.textContent = "開始";
-
-  if (newMode === "focus") {
-    timeLeft = 1 * 60;
-    modeLabel.textContent = "集中 25:00";
-  } else if (newMode === "short") {
-    timeLeft = 5 * 60;
-    modeLabel.textContent = "休憩 5:00";
-  } else if (newMode === "long") {
-    timeLeft = 15 * 60;
-    modeLabel.textContent = "長休憩 15:00";
+  isRunning = false;
+  statusDisplay.textContent = "一時停止中";
+  if (isStudy && modeSelect.value !== "up") {
+    let elapsed = getInitialTime() - timeLeft;
+    if (elapsed > 0) recordStudy(elapsed);
   }
-  mode = newMode;
-  stopFlash();
-  updateDisplay();
 }
 
-function triggerFlash() {
-  document.body.classList.add("flash");
-  flashing = true;
-  alert("タイマー終了！");
-}
-
-function stopFlash() {
-  document.body.classList.remove("flash");
-  flashing = false;
-}
-
-document.body.addEventListener("click", () => {
-  if (flashing) stopFlash();
-});
-
-document.getElementById("startBtn").onclick = startTimer;
-document.getElementById("nextBtn").onclick = () => {
-  setCount++;
-  setLabel.textContent = `${setCount}セット目`;
-  setMode("focus");
-};
-document.getElementById("endBtn").onclick = () => {
+// 停止
+function stopTimer() {
   clearInterval(timer);
-  running = false;
+  isRunning = false;
+  isStudy = true;
   setCount = 1;
-  setLabel.textContent = "1セット目";
-  setMode("focus");
-};
+  timeLeft = 0;
+  updateDisplay();
+  statusDisplay.textContent = "停止中";
+}
 
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") startTimer();
-  if (e.key.toLowerCase() === "k") document.getElementById("nextBtn").click();
-  if (e.key.toLowerCase() === "e") document.getElementById("endBtn").click();
-});
+startBtn.onclick = () => {
+  if (timeLeft === 0) timeLeft = getInitialTime();
+  startTimer();
+};
+pauseBtn.onclick = pauseTimer;
+stopBtn.onclick = () => {
+  if (isStudy && timeLeft > 0 && modeSelect.value !== "up") {
+    recordStudy(getInitialTime() - timeLeft);
+  }
+  stopTimer();
+};
 
 updateDisplay();
+updateTotalDisplay();
 </script>
 </body>
 </html>
