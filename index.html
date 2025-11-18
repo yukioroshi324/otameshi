@@ -183,19 +183,22 @@ function tick() {
     }
   }
 }
-function flashScreen() {
-  let i = 0;
-  let colors = ["#9f00ff", "#000000", "#baff00", "#000000"];
-  const flash = setInterval(() => {
-    document.body.style.backgroundColor = colors[i % 2];
-    i++;
-    if (i > 10) {
-      clearInterval(flash);
-      document.body.style.backgroundColor = "#ffffff";
-    }
-  }, 200);
-}
 
+
+function flashScreen() {
+  flashing = true;
+  let colors = ["#9f00ff", "#000000", "#baff00", "#000000"]; // 紫→黒→黄緑→黒
+  let i = 0;
+  let flashInterval = setInterval(() => {
+    if (!flashing) {
+      clearInterval(flashInterval);
+      document.body.style.backgroundColor = "#eef6ff";
+      return;
+    }
+    document.body.style.backgroundColor = colors[i % colors.length];
+    i++;
+  }, 150); // ← 0.15秒ごと点滅（高速）
+  document.body.addEventListener("click", nextAfterFlash, { once: true });
 
 function changeMode() {
   if (isRunning) pauseTimer();
