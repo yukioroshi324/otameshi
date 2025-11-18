@@ -187,7 +187,7 @@ function tick() {
 
 function flashScreen() {
   let i = 0;
-  const colors = ["#9f00ff", "#000000", "#baff00", "#000000"];
+  const colors = ["#9f00ff", "#baff00"];
   const flash = setInterval(() => {
     document.body.style.backgroundColor = colors[i % 2];
     i++;
