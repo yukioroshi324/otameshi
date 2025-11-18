@@ -184,18 +184,20 @@ function tick() {
   }
 }
 
-function flashScreen() {
+function startFlashing() {
+  flashing = true;
+  let colors = ["#9f00ff", "#000000", "#baff00", "#000000"]; // 紫→黒→黄緑→黒
   let i = 0;
-  const colors = ["#d8b3ff", "#aaffaa"];
-  const flash = setInterval(() => {
-    document.body.style.backgroundColor = colors[i % 2];
-    i++;
-    if (i > 10) {
-      clearInterval(flash);
-      document.body.style.backgroundColor = "#ffffff";
+  let flashInterval = setInterval(() => {
+    if (!flashing) {
+      clearInterval(flashInterval);
+      document.body.style.backgroundColor = "#eef6ff";
+      return;
     }
-  }, 200);
-}
+    document.body.style.backgroundColor = colors[i % colors.length];
+    i++;
+  }, 150); // ← 0.15秒ごと点滅（高速）
+  document.body.addEventListener("click", nextAfterFlash, { once: true });
 
 function updateTotalDisplay() {
   const h = Math.floor(totalTime / 3600);
